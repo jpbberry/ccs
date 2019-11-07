@@ -2,12 +2,12 @@ const client = {}
 client.config = require('./config.js')
 
 const express = require('express')
-let app = express()
+const app = express()
 
 const fs = require('fs')
 const path = require('path')
 
-let routes = fs.readdirSync('./routes')
+const routes = fs.readdirSync('./routes')
 routes.forEach(route => {
   if (!route.endsWith('.js')) return
   const routeFile = require(path.resolve('./routes', route))
