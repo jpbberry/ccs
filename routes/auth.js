@@ -14,7 +14,7 @@ function encodeJSON (element, key, list) {
 module.exports = (client) => {
   router.get('/', (req, res) => {
     res.redirect(
-      'https://discordapp.com/api/oauth2/authorize' +
+      'https://discordapp.com/api/oauth2/authorize?' +
         encodeJSON({
           client_id: client.config.oauth.id,
           redirect_uri: client.redirectURL,
@@ -28,7 +28,8 @@ module.exports = (client) => {
     const code = req.query.code
     if (!code) return res.send('Error! Missing code.')
     const user = await client.authorize(req.query.code)
-    req.cookie('token', user.token)
+    if (user.error) return res.send(user.error)
+    res.cookie('token', user.token)
     res.redirect('https://api.jt3ch.net')
   })
 

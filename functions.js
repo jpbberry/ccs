@@ -1,6 +1,7 @@
 const fetch = require('node-fetch')
 const flake = require('simpleflake')
 const crypto = require('crypto')
+const moment = require('moment')
 
 function encodeJSON (element, key, list) {
   list = list || []
@@ -40,17 +41,15 @@ module.exports = (client) => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: encodeJSON(
-        {
-          client_id: client.config.oauth.id,
-          client_secret: client.config.oauth.secret,
-          code: refresh ? undefined : code,
-          refresh_token: refresh ? code : undefined,
-          grant_type: refresh ? 'refresh_token' : 'authorization_code',
-          redirect_uri: client.redirectURL,
-          scope: 'identify guilds'
-        }
-      )
+      body: encodeJSON({
+        client_id: client.config.oauth.id,
+        client_secret: client.config.oauth.secret,
+        code: refresh ? undefined : code,
+        refresh_token: refresh ? code : undefined,
+        grant_type: refresh ? 'refresh_token' : 'authorization_code',
+        redirect_uri: client.redirectURL,
+        scope: 'identify guilds'
+      })
     })
     return f.json()
   }
@@ -60,16 +59,23 @@ module.exports = (client) => {
   }
 
   client.authorize = async (code) => {
-    const user = await client.getToken(code)
+    const bearer = await client.getToken(code)
+    if (!bearer) return { error: 'Error occured while authenticating you!' }
+    const user = await client.getUser(bearer.access_token)
+    if (!user) return { error: 'Invalid user' }
     const dbUser = await client.db.collection('users').findOne({ id: user.id })
     if (dbUser) {
-      if (dbUser.bearer !== user.access_token || dbUser.refresh !== user.refresh_token || dbUser.username !== user.username || dbUser.discriminator !== user.discriminator) {
-        await client.db.collection('users').update(user.id, {
-          bearer: user.access_token,
-          refresh: user.refresh_token,
-          expires: new Date(new Date().getTime() + user.expires_in),
-          username: user.username,
-          discriminator: user.discriminator
+      if (dbUser.bearer !== bearer.access_token || dbUser.refresh !== bearer.refresh_token || dbUser.username !== user.username || dbUser.discriminator !== user.discriminator) {
+        await client.db.collection('users').updateOne({
+          id: user.id
+        }, {
+          $set: {
+            bearer: bearer.access_token,
+            refresh: bearer.refresh_token,
+            expires: new Date(new Date().getTime() + bearer.expires_in),
+            username: user.username,
+            discriminator: user.discriminator
+          }
         })
       }
       return dbUser
@@ -77,10 +83,11 @@ module.exports = (client) => {
     const newToken = crypto.createHash('sha256').update(flake(new Date())).update(client.config.oauth.mysecret).digest('hex')
 
     const newUser = {
+      id: user.id,
       token: newToken,
-      bearer: user.access_token,
-      expires: new Date(new Date() + user.expires_in),
-      refresh: user.refresh_token,
+      bearer: bearer.access_token,
+      expires: new Date(new Date() + bearer.expires_in),
+      refresh: bearer.refresh_token,
       username: user.username,
       discriminator: user.discriminator
     }
@@ -91,5 +98,103 @@ module.exports = (client) => {
 
   client.isCustodian = async (userID) => {
     return true
+  }
+
+  // tickets
+  client.getTickets = () => {
+    return client.db.collection('tickets').find({}).toArray()
+  }
+
+  client.getTicket = (id) => {
+    return client.db.collection('tickets').findOne({ id: id })
+  }
+  /**
+  const ticketOBJ = {
+    id: null,
+    owner: null,
+    content: [],
+    comments: []
+  }
+
+  const contentOBJ = {
+    time: null,
+    title: '',
+    status: 0,
+    category: 'todo',
+    tags: []
+  }
+  
+  const commentOBJ = {
+    user: null,
+    time: null,
+    content: []
+  }
+  */
+  client.addTicket = async (userID, ticketID, content) => {
+    const ticket = await client.getTicket(ticketID)
+    if (ticket) return { error: 'Ticket is already made by someone else!' }
+    const ticketOBJ = {
+      id: null,
+      owner: null,
+      content: [],
+      comments: []
+    }
+    ticketOBJ.id = ticketID
+    ticketOBJ.owner = userID
+    const contentOBJ = {
+      time: null,
+      title: '',
+      status: 0,
+      category: 'todo',
+      tags: []
+    }
+    contentOBJ.time = moment.unix()
+    contentOBJ.title = content.title
+    contentOBJ.status = content.status
+    contentOBJ.tags = content.tags
+
+    ticketOBJ.content.push(contentOBJ)
+
+    return client.db.collection('tickets').insertOne(ticketOBJ)
+  }
+
+  client.isMaintainer = (uid) => {
+    return true
+  }
+
+  client.editTicket = async (userID, ticketID, content) => {
+    const ticket = await client.getTicket(ticketID)
+    if (!ticket) return { error: 'Ticket doesn\'t exist' }
+    if (ticket.owner !== userID && !client.isMaintainer(userID)) return { error: 'You\'re not allowed to do this!' }
+
+    const current = ticket.content[ticket.content.length]
+
+    const contentOBJ = {
+      time: null,
+      title: '',
+      status: 0,
+      category: 'todo',
+      tags: []
+    }
+    contentOBJ.time = moment.unix()
+    contentOBJ.title = content.title || current.title
+    contentOBJ.status = content.status || current.status
+    contentOBJ.tags = content.tags || current.tags
+
+    ticket.content.push(contentOBJ)
+
+    return client.db.collection('tickets').updateOne({
+      id: ticketID
+    }, {
+      $set: {
+        content: ticket.content
+      }
+    })
+  }
+
+  // comments
+
+  client.addComment = (userID, ticketID, content) => {
+
   }
 }

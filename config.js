@@ -3,6 +3,8 @@ const config = {
   database: {
     host: 'localhost',
     port: '27017',
+    username: 'ccs',
+    password: 'password',
     db: 'ccs'
   },
   ...require('./private-config.js')
