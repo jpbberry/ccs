@@ -73,7 +73,7 @@ module.exports = (client) => {
       }
       return dbUser
     }
-    const newToken = crypto.createHash('sha256').update(flake(new Date())).update(config.oauth.mysecret).digest('hex')
+    const newToken = crypto.createHash('sha256').update(flake(new Date())).update(client.config.oauth.mysecret).digest('hex')
 
     const newUser = {
       token: newToken,
