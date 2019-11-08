@@ -85,4 +85,8 @@ module.exports = (client) => {
     await client.db.collection('users').insertOne(newUser)
     return newUser
   }
+
+  client.isCustodian = async (userID) => {
+    return true
+  }
 }
