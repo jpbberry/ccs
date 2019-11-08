@@ -1,6 +1,9 @@
 const redirectURL = 'https://api.jt3ch.net/ccs/auth/callback'
 
 const fetch = require('node-fetch')
+const flake = require('simpleflake')
+const crypto = require('crypto')
+
 function encodeJSON (element, key, list) {
   list = list || []
   if (typeof (element) === 'object') {
@@ -51,5 +54,35 @@ module.exports = (client) => {
       )
     })
     return f.json()
+  }
+
+  client.getUser = (token) => {
+    return client.request('/users/@me', 'GET', null, `Bearer ${token}`)
+  }
+
+  client.authorize = async (code) => {
+    const user = await client.getToken(code)
+    const dbUser = await client.db.collection('users').findOne({ id: user.id })
+    if (dbUser) {
+      if (dbUser.bearer !== user.access_token || dbUser.refresh !== user.refresh_token) {
+        await client.db.collection('users').update(user.id, {
+          bearer: user.access_token,
+          refresh: user.refresh_token,
+          expires: new Date(new Date().getTime() + user.expires_in)
+        })
+      }
+      return dbUser
+    }
+    const newToken = crypto.createHash('sha256').update(flake(new Date())).update(config.oauth.mysecret).digest('hex')
+
+    const newUser = {
+      token: newToken,
+      bearer: user.access_token,
+      expires: new Date(new Date() + user.expires_in),
+      refresh: user.refresh_token
+    }
+
+    await client.db.collection('users').insertOne(newUser)
+    return newUser
   }
 }
