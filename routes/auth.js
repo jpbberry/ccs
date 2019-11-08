@@ -29,6 +29,7 @@ module.exports = (client) => {
     if (!code) return res.send('Error! Missing code.')
     const user = await client.authorize(req.query.code)
     req.cookie('token', user.token)
+    res.redirect('https://api.jt3ch.net')
   })
 
   return router
