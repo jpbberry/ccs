@@ -3,28 +3,29 @@ const flake = require('simpleflake')
 const crypto = require('crypto')
 const moment = require('moment')
 
-function encodeJSON (element, key, list) {
+function encodeJSON(element, key, list) {
   list = list || []
-  if (typeof (element) === 'object') {
+  if (typeof(element) === 'object') {
     for (const idx in element) { encodeJSON(element[idx], key ? key + '[' + idx + ']' : idx, list) }
-  } else {
+  }
+  else {
     list.push(key + '=' + encodeURIComponent(element))
   }
   return list.join('&')
 }
 module.exports = (client) => {
   client.redirectURL = 'https://api.jt3ch.net/ccs/auth/callback'
-  client.request = async (url, method = 'GET', body, token, headers) => {
+  client.request = async(url, method = 'GET', body, token, headers) => {
     return new Promise((resolve, reject) => {
       fetch(`https://discordapp.com/api/v7${url}`, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-          ...headers
-        },
-        body: body ? JSON.stringify(body) : null
-      })
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+            ...headers
+          },
+          body: body ? JSON.stringify(body) : null
+        })
         .then(res => {
           res.json()
             .then(json => {
@@ -35,7 +36,7 @@ module.exports = (client) => {
     })
   }
 
-  client.getToken = async (code, refresh = false) => {
+  client.getToken = async(code, refresh = false) => {
     const f = await fetch('https://discordapp.com/api/v7/oauth2/token', {
       method: 'POST',
       headers: {
@@ -58,7 +59,7 @@ module.exports = (client) => {
     return client.request('/users/@me', 'GET', null, `Bearer ${token}`)
   }
 
-  client.authorize = async (code) => {
+  client.authorize = async(code) => {
     const bearer = await client.getToken(code)
     if (!bearer) return { error: 'Error occured while authenticating you!' }
     const user = await client.getUser(bearer.access_token)
@@ -96,7 +97,7 @@ module.exports = (client) => {
     return newUser
   }
 
-  client.isCustodian = async (userID) => {
+  client.isCustodian = async(userID) => {
     return true
   }
 
@@ -113,7 +114,7 @@ module.exports = (client) => {
     id: null,
     owner: null,
     content: [],
-    comments: []
+    comments: {}
   }
 
   const contentOBJ = {
@@ -126,18 +127,24 @@ module.exports = (client) => {
   
   const commentOBJ = {
     user: null,
+    id: "",
     time: null,
     content: []
   }
+  
+  const commentContentOBJ = {
+    time: null,
+    content: ''
+  }
   */
-  client.addTicket = async (userID, ticketID, content) => {
+  client.addTicket = async(userID, ticketID, content) => {
     const ticket = await client.getTicket(ticketID)
     if (ticket) return { error: 'Ticket is already made by someone else!' }
     const ticketOBJ = {
       id: null,
       owner: null,
       content: [],
-      comments: []
+      comments: {}
     }
     ticketOBJ.id = ticketID
     ticketOBJ.owner = userID
@@ -162,7 +169,7 @@ module.exports = (client) => {
     return true
   }
 
-  client.editTicket = async (userID, ticketID, content) => {
+  client.editTicket = async(userID, ticketID, content) => {
     const ticket = await client.getTicket(ticketID)
     if (!ticket) return { error: 'Ticket doesn\'t exist' }
     if (ticket.owner !== userID && !client.isMaintainer(userID)) return { error: 'You\'re not allowed to do this!' }
@@ -170,16 +177,12 @@ module.exports = (client) => {
     const current = ticket.content[ticket.content.length]
 
     const contentOBJ = {
-      time: null,
-      title: '',
-      status: 0,
+      time: moment.unix(),
+      title: content.title || current.title,
+      status: content.status || current.status,
       category: 'todo',
-      tags: []
+      tags: content.tags || current.tags
     }
-    contentOBJ.time = moment.unix()
-    contentOBJ.title = content.title || current.title
-    contentOBJ.status = content.status || current.status
-    contentOBJ.tags = content.tags || current.tags
 
     ticket.content.push(contentOBJ)
 
@@ -195,6 +198,53 @@ module.exports = (client) => {
   // comments
 
   client.addComment = (userID, ticketID, content) => {
+    const ID = Math.floor(`${Math.random()*10000000000}` + new Date().getTime())
+    const commentOBJ = {
+      user: moment.unix(),
+      id: ID,
+      time: new Date(),
+      content: []
+    }
+    const commentContentOBJ = {
+      time: null,
+      content: `${content}`
+    }
 
+    commentOBJ.content.push(commentContentOBJ)
+    
+    const updateOBJ = {}
+    
+    updateOBJ[`comments.${ID}`] = commentOBJ
+    
+    return client.db.collection('tickets').updateOne({
+      id: ticketID
+    }, {
+      $set: updateOBJ
+    })
   }
+  
+  client.editComment = async (userID, ticketID, commentID, content) => {
+    const commentContentOBJ = {
+      time: moment.unix(),
+      content: `${content}`
+    }
+    
+    const ticket = await client.getTicket(ticketID)
+    if (!ticket.comments[commentID]) return { error: 'Invalid comment' }
+    if (ticket.comments[commentID].owner !== userID) return { error: 'User doesn\'t own comment' }
+
+    const updateOBJ = {}
+    updateOBJ[`comments.${commentID}.content`] = commentContentOBJ
+    
+    return client.db.collection('tickets').updateOne(
+      {
+        id: ticketID
+      },
+      {
+        $push: updateOBJ
+      }
+    )
+  }
+  
+  client.deleteComment = () => {} // TODO
 }
