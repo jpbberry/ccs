@@ -23,3 +23,5 @@ routes.forEach(route => {
 })
 
 app.listen(client.config.port)
+
+module.exports = client
