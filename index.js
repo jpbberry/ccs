@@ -6,6 +6,9 @@ const app = express()
 require('./database')(client)
 require('./functions.js')(client)
 
+const cookieParser = require('cookie-parser')
+const bodyParser = require('body-parser')
+
 const fs = require('fs')
 const path = require('path')
 
@@ -14,6 +17,16 @@ const routes = fs.readdirSync('./routes')
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`)
   next()
+})
+
+app.use(cookieParser())
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({
+  extended: true
+}))
+
+app.get('/', (req, res) => {
+  res.send('ccs')
 })
 
 routes.forEach(route => {

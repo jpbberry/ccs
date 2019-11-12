@@ -13,7 +13,7 @@ function encodeJSON(element, key, list) {
   return list.join('&')
 }
 module.exports = (client) => {
-  client.redirectURL = 'https://api.jt3ch.net/ccs/auth/callback'
+  client.redirectURL = 'https://ccs.jt3ch.net/auth/callback'
   client.request = async(url, method = 'GET', body, token, headers) => {
     return new Promise((resolve, reject) => {
       fetch(`https://discordapp.com/api/v7${url}`, {
@@ -106,7 +106,6 @@ module.exports = (client) => {
     const users = await client.db.collection('users').find({}).toArray()
     const tickets = await client.db.collection('tickets').find({}).toArray()
     tickets.forEach(ticket => {
-      const comments = []
       const user = users.find(x => x.id === ticket.owner)
       if (!user) ticket.owner = null
       else ticket.owner = {
@@ -114,18 +113,7 @@ module.exports = (client) => {
         discriminator: user.discriminator,
         id: user.id
       }
-      Object.keys(ticket.comments).forEach(commentID => {
-        const comment = ticket.comments[commentID]
-        const commentUser = users.find(x => x.id === comment.user)
-        comment.user = {
-          username: commentUser.username,
-          discriminator: commentUser.discriminator,
-          id: commentUser.id
-        }
-        comment.content = comment.content[comment.content.length - 1]
-        comments.push(comment)
-      })
-      ticket.comments = comments
+      delete ticket.comments
       ticket.content = ticket.content[ticket.content.length - 1]
       res.push(ticket)
     })
@@ -133,7 +121,7 @@ module.exports = (client) => {
     return res
   }
 
-  client.getTicket = async(id) => {
+  client.getTicket = async (id) => {
     const ticket = await client.db.collection('tickets').findOne({ id: id })
     if (!ticket) return null
     const user = await client.db.collection('users').findOne({ id: ticket.owner })
@@ -144,8 +132,9 @@ module.exports = (client) => {
     } : null
 
     const comments = []
-    for (let i = 0; i < Object.keys(ticket.comments); i++) {
-      const comment = ticket.comments[Object.keys(ticket.comments)[i]]
+    const keys = Object.keys(ticket.comments)
+    for (let i = 0; i < keys.length; i++) {
+      const comment = ticket.comments[keys[i]]
       if (!comment) break;
       const commentUser = await client.db.collection('users').findOne({ id: comment.user })
       comment.user = commentUser ? {
@@ -221,13 +210,11 @@ module.exports = (client) => {
     return true
   }
 
-  client.editTicket = async(userID, ticketID, content) => {
+  client.editTicket = async(ticketID, content) => {
     const ticket = await client.db.collection('tickets').findOne({ id: ticketID })
     if (!ticket) return { error: 'Ticket doesn\'t exist' }
-    if (ticket.owner !== userID && !client.isMaintainer(userID)) return { error: 'You\'re not allowed to do this!' }
 
-    const current = ticket.content[ticket.content.length]
-
+    const current = ticket.content[ticket.content.length - 1]
     const contentOBJ = {
       time: new Date(),
       title: content.title || current.title,
@@ -249,8 +236,8 @@ module.exports = (client) => {
 
   // comments
 
-  client.addComment = (userID, ticketID, content) => {
-    const ID = Math.floor(`${Math.random()*10000000000}` + new Date().getTime())
+  client.addComment = async (userID, ticketID, content) => {
+    const ID = `${Math.floor(`${Math.random()*10000000000}` + new Date().getTime())}`
     const commentOBJ = {
       user: userID,
       id: ID,
@@ -268,14 +255,16 @@ module.exports = (client) => {
 
     updateOBJ[`comments.${ID}`] = commentOBJ
 
-    return client.db.collection('tickets').updateOne({
+    await client.db.collection('tickets').updateOne({
       id: ticketID
     }, {
       $set: updateOBJ
     })
+    
+    return { id: ID }
   }
 
-  client.editComment = async(userID, ticketID, commentID, content) => {
+  client.editComment = async(ticketID, commentID, content) => {
     const commentContentOBJ = {
       time: new Date(),
       content: `${content}`
@@ -284,7 +273,6 @@ module.exports = (client) => {
     const ticket = await client.db.collection('tickets').findOne({ id: ticketID })
     if (!ticket) return { error: 'Invalid ticket' }
     if (!ticket.comments[commentID]) return { error: 'Invalid comment' }
-    if (ticket.comments[commentID].user !== userID) return { error: 'User doesn\'t own comment' }
 
     const updateOBJ = {}
     updateOBJ[`comments.${commentID}.content`] = commentContentOBJ

@@ -30,7 +30,7 @@ module.exports = (client) => {
     const user = await client.authorize(req.query.code)
     if (user.error) return res.send(user.error)
     res.cookie('token', user.token)
-    res.redirect('https://api.jt3ch.net')
+    res.redirect('https://ccs.jt3ch.net')
   })
 
   return router
