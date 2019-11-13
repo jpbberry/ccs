@@ -1,0 +1,19 @@
+<!HTDOCS html>
+<html>
+    <head>
+    </head>
+    <body>
+        <% if (!user) { %>
+            <button onclick="location.href = 'https://ccs.jt3ch.net/auth'">Login</button>
+        <% } else { %>
+            <h4><%=`${user.username}#${user.discriminator}`%> <button onclick="location.href = 'https://ccs.jt3ch.net/auth/logout'">Logout</button></h4> <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/add'">Add Ticket</button>
+        <% } %>
+        <ul>
+            <% tickets.forEach(ticket => { %>
+                <li>
+                    <a href="https://ccs.jt3ch.net/tickets/<%=ticket.id%>"><%=ticket.id%> | <%= ticket.content.title %> | <%= ticket.content.tags.join(', ') %></a>
+                </li>
+            <% }) %>
+        </ul>
+    </body>
+</html>

@@ -12,7 +12,12 @@ module.exports = (client) => {
   
   router.get('/', async (req, res) => {
     const tickets = await client.getTickets()
-    res.json(tickets)
+    res.render('tickets', { tickets, user: req.user })
+  })
+  
+  router.get('/add', (req, res) => {
+    if (!req.user) return res.redirect('https://ccs.jt3ch.net/auth')
+    res.render('addticket')
   })
   
   router.post('/', async (req, res) => {
@@ -36,7 +41,20 @@ module.exports = (client) => {
   })
   
   router.get('/:ticket', (req, res) => {
-    res.json(req.ticket)
+    res.render('ticket', { ticket: req.ticket, user: req.user})
+  })
+  
+  router.get('/:ticket/edit', (req, res) => {
+    if (req.user.id !== req.ticket.owner.id) return res.send('You don\'t own this ticket')
+    res.render('editticket', { ticket: req.ticket })
+  })
+  
+  router.delete('/:ticket', async (req, res) => {
+    if (!req.user) return res.json({ error: 'Invalid user' })
+    if (req.user.id !== req.ticket.owner.id) return res.json({ error: 'User doesn\'t own ticket'})
+    
+    await client.deleteTicket(req.ticket.id)
+    res.json({ success: true })
   })
   
   router.put('/:ticket', async (req, res) => {
@@ -84,6 +102,15 @@ module.exports = (client) => {
     
     res.json({ success: true })
   }) 
+  
+  router.delete('/:ticket/comments/:comment', async (req, res) => {
+    if (!req.user) return res.json({ error: 'Invalid user' })
+    if (req.user.id !== req.comment.user.id) return res.json({ error: 'User cannot delete comment' })
+    
+    await client.deleteComment(req.ticket.id, req.comment.id)
+    
+    res.json({ success: true })
+  })
     
   return router
 }

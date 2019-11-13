@@ -1,0 +1,118 @@
+<!HTDOCS html>
+<html>
+    <head></head>
+    <body>
+        <button onclick="location.href = 'https://ccs.jt3ch.net/tickets'">back</button>
+        <div>
+            <h1><%= ticket.content.title %> - <%= `${ticket.content.time.getMonth()+1 }/${ticket.content.time.getDate()}/${ticket.content.time.getFullYear()} ${ticket.content.time.getHours()}:${ticket.content.time.getMinutes()}` %></h1>
+            <h2><a href="https://support.discordapp.com/hc/en-us/community/posts/<%= ticket.id %>"><%= ticket.id %></a> by <%= ticket.owner ? `${ticket.owner.username}#${ticket.owner.discriminator}` : 'None' %></h2>
+            <% if (ticket.owner && user && ticket.owner.id === user.id) { %>
+                <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>/edit'">Edit</button>
+                <button onclick="deleteTicket()">Delete</button>
+                <script>
+                    function deleteTicket() {
+                        var conf = confirm('Are you sure you want to delete this ticket?')
+                        if (!conf) return
+                        
+                        
+                        var xhr = new XMLHttpRequest()
+                        xhr.open('DELETE', 'https://ccs.jt3ch.net/tickets/<%=ticket.id%>')
+                        
+                        xhr.onload = function() {
+                            var response = JSON.parse(xhr.response)
+                            if (response.error) return alert(response.error)
+                            
+                            window.location.href = 'https://ccs.jt3ch.net/tickets'
+                        }
+                        xhr.send(null)
+                    }
+                </script>
+            <% } %>
+            <div>
+                <h3>Comments</h3>
+                <ul>
+                    <% let editing = false %>
+                    <% ticket.comments.forEach(comment => { %>
+                        <% if (user && comment.user.id === user.id) { %>
+                            <% editing = true %>
+                            <li> <a><i
+                                <% if (comment.content.time) { %>
+                                    title="Edited at <%= `${comment.content.time.getMonth()+1 }/${comment.content.time.getDate()}/${comment.content.time.getFullYear()} ${comment.content.time.getHours()}:${comment.content.time.getMinutes()}` %>"
+                                <% } %>
+                            ><%= `${comment.time.getMonth()+1 }/${comment.time.getDate()}/${comment.time.getFullYear()} ${comment.time.getHours()}:${comment.time.getMinutes()}` %>
+                                
+                            </i>
+                            <b><%= `${comment.user.username}#${comment.user.discriminator}` %></b> - <input id="edit<%=comment.id%>" placeholder="Edit" value="<%= comment.content.content %>"></a> 
+                                <button onclick="edit('<%=comment.id%>')">Edit</button>
+                                <button onclick="del('<%=comment.id%>')">Delete</button>
+                            </li>
+                        <% } else { %>
+                            <li> <a><i
+                                <% if (comment.content.time) { %>
+                                    title="Edited at <%= `${comment.content.time.getMonth()+1 }/${comment.content.time.getDate()}/${comment.content.time.getFullYear()} ${comment.content.time.getHours()}:${comment.content.time.getMinutes()}` %>"
+                                <% } %>
+                            ><%= `${comment.time.getMonth()+1 }/${comment.time.getDate()}/${comment.time.getFullYear()} ${comment.time.getHours()}:${comment.time.getMinutes()}` %>
+                                
+                            </i>
+                            <b><%= `${comment.user.username}#${comment.user.discriminator}` %></b> - <%= comment.content.content %></a> </li>
+                        <% } %>
+                    <% }) %>
+                    <% if (editing) { %>
+                        <script>
+                            function edit(id) {
+                                var content = document.getElementById("edit" + id).value
+                                
+                                var xhr = new XMLHttpRequest()
+                                xhr.open('PUT', 'https://ccs.jt3ch.net/tickets/<%=ticket.id%>/comments/' + id)
+                                
+                                xhr.onload = function() {
+                                    var response = JSON.parse(xhr.response)
+                                    if (response.error) return alert(response.error)
+                                    
+                                    window.location.reload()
+                                }
+                                
+                                xhr.setRequestHeader('Content-Type', 'application/json')
+                                xhr.send(JSON.stringify({ content: content }))
+                            }
+                            
+                            function del(id) {
+                                var xhr = new XMLHttpRequest()
+                                xhr.open('DELETE', 'https://ccs.jt3ch.net/tickets/<%=ticket.id%>/comments/' + id)
+                                
+                                xhr.onload = function() {
+                                    var response = JSON.parse(xhr.response)
+                                    if (response.error) return alert(response.error)
+                                    
+                                    window.location.reload()
+                                }
+                                xhr.send(null)
+                            }
+                        </script>
+                    <% } %>
+                </ul>
+                <% if (user) { %>
+                    <input id="comment" placeholder="Comment"><button onclick="submit()">Add Comment</button>
+                    <script>
+                        function submit() {
+                            var content = document.getElementById('comment').value
+                            
+                            var xhr = new XMLHttpRequest()
+                            xhr.open('POST', 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>/comments')
+                            
+                            xhr.onload = function() {
+                                var response = JSON.parse(xhr.response)
+                                if (response.error) return alert(response.error)
+                                
+                                window.location.reload()
+                            }
+                            
+                            xhr.setRequestHeader('Content-Type', 'application/json')
+                            xhr.send(JSON.stringify({ content: content }))
+                        }
+                    </script>
+                <% } %>
+            </div>
+        </div>
+    </body>
+</html>

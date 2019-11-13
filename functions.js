@@ -48,7 +48,7 @@ module.exports = (client) => {
         refresh_token: refresh ? code : undefined,
         grant_type: refresh ? 'refresh_token' : 'authorization_code',
         redirect_uri: client.redirectURL,
-        scope: 'identify guilds'
+        scope: 'identify'
       })
     })
     return f.json()
@@ -95,9 +95,23 @@ module.exports = (client) => {
     await client.db.collection('users').insertOne(newUser)
     return newUser
   }
+  
+  client.ticketExist = (ticketID) => {
+    return new Promise(resolve => {
+      fetch(`https://support.discordapp.com/api/v2/help_center/community/posts/${ticketID}`)
+        .then(x => {
+          if (x.ok) resolve(true)
+          else resolve(false)
+        })
+    })
+  }
 
   client.isCustodian = async(userID) => {
     return true
+  }
+  
+  client.deleteTicket = (ticketID) => {
+    return client.db.collection('tickets').removeOne({ id: ticketID })
   }
 
   // tickets
@@ -181,6 +195,8 @@ module.exports = (client) => {
   client.addTicket = async(userID, ticketID, content) => {
     const ticket = await client.db.collection('tickets').findOne({ id: ticketID })
     if (ticket) return { error: 'Ticket is already made by someone else!' }
+    const exists = await client.ticketExist(ticketID)
+    if (!exists) return { error: 'Invalid feedback ticket' }
     const ticketOBJ = {
       id: null,
       owner: null,
@@ -284,5 +300,9 @@ module.exports = (client) => {
     })
   }
 
-  client.deleteComment = () => {} // TODO
+  client.deleteComment = (ticketID, commentID) => {
+    const obj = {}
+    obj[`comments.${commentID}`] = ""
+    return client.db.collection('tickets').updateOne({ id: ticketID}, { $unset: obj })
+  }
 }

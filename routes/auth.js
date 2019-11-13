@@ -19,7 +19,7 @@ module.exports = (client) => {
           client_id: client.config.oauth.id,
           redirect_uri: client.redirectURL,
           response_type: 'code',
-          scope: 'identify guilds'
+          scope: 'identify'
         })
     )
   })
@@ -30,7 +30,12 @@ module.exports = (client) => {
     const user = await client.authorize(req.query.code)
     if (user.error) return res.send(user.error)
     res.cookie('token', user.token)
-    res.redirect('https://ccs.jt3ch.net')
+    res.redirect('https://ccs.jt3ch.net/tickets')
+  })
+  
+  router.get('/logout', (req, res) => {
+    res.clearCookie('token')
+    res.redirect('https://ccs.jt3ch.net/tickets')
   })
 
   return router
