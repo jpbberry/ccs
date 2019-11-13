@@ -2,10 +2,11 @@
 <html>
     <head>
         <style>
-            .table {
+            #table {
                 text-align: left;
+                width: 99%;
             }
-            th {
+            td {
                 border: 1px black solid;
             }
             .keys {
@@ -15,9 +16,18 @@
             .ids {
                 text-align: center;
                 cursor: pointer;
+                width: 10%;
             }
             .tags, .titles {
-                padding-left: 1em;
+                padding-left: 0.6em;
+            }
+            .tags {
+                white-space: nowrap;
+                width: 20%;
+            }
+            .titles {
+                height: 2em;
+                width: 50%;
             }
             .copied {
                 color: green;
@@ -30,7 +40,28 @@
         <% } else { %>
             <h4><%=`${user.username}#${user.discriminator}`%> <button onclick="location.href = 'https://ccs.jt3ch.net/auth/logout'">Logout</button></h4> <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/add'">Add Ticket</button>
         <% } %>
-        <table class="table">
+        <input id="search" placeholder="Search" onkeyup="search()">
+        <script>
+            function search() {
+                var input, filter, table, tr, td, i, txtValue;
+                input = document.getElementById("search");
+                filter = input.value.toUpperCase();
+                table = document.getElementById("table");
+                tr = table.getElementsByTagName("tr");
+                for (i = 0; i < tr.length; i++) {
+                    td = tr[i].getElementsByTagName("td")[1];
+                    if (td) {
+                        txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                        } else {
+                            tr[i].style.display = "none";
+                        }
+                    }       
+                }
+            }
+        </script>
+        <table id="table">
             <tr class="keys">
                 <th>ID (Click to Copy)</th>
                 <th>Title</th>
@@ -38,9 +69,9 @@
             </tr>
             <% tickets.forEach(ticket => { %>
                 <tr>
-                    <th class="ids" onclick="copy(this)"><%=ticket.id%></th>
-                    <th class="titles"> <a href="https://ccs.jt3ch.net/tickets/<%=ticket.id%>"><%= ticket.content.title %></a></th>
-                    <th class="tags"> <%= ticket.content.tags.join(', ') %> </th>
+                    <td class="ids" onclick="copy(this)"><%=ticket.id%></th>
+                    <td class="titles"> <a href="https://ccs.jt3ch.net/tickets/<%=ticket.id%>"><%= ticket.content.title %></a></th>
+                    <td class="tags"> <%= ticket.content.tags.join(', ') %> </th>
                 </tr>
             <% }) %>
         </table>
