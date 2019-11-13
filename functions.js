@@ -222,8 +222,8 @@ module.exports = (client) => {
     return client.db.collection('tickets').insertOne(ticketOBJ)
   }
 
-  client.isMaintainer = (uid) => {
-    return true
+  client.isMaintainer = async (uid) => {
+    return client.config.maintainers.includes(uid)
   }
 
   client.editTicket = async(ticketID, content) => {
@@ -318,6 +318,7 @@ module.exports = (client) => {
       const keys = Object.keys(ticket.comments)
       keys.forEach(commentID => {
         const comment = ticket.comments[commentID]
+        comment.ticket = ticket.id
         if (comment.user === userID) comments.push(comment)
       })
     })

@@ -7,12 +7,20 @@
         <meta property="theme-color" value="#31de5f">
     </head>
     <body>
-        <button onclick="location.href = 'https://ccs.jt3ch.net/tickets'">back</button>
+        <button onclick="location.href = 'https://ccs.jt3ch.net/tickets'">Back</button>
         <div>
             <h1><%= ticket.content.title %> - <%= `${ticket.content.time.getMonth()+1 }/${ticket.content.time.getDate()}/${ticket.content.time.getFullYear()} ${ticket.content.time.getHours()}:${ticket.content.time.getMinutes()}` %></h1>
-            <h2><a href="https://support.discordapp.com/hc/en-us/community/posts/<%= ticket.id %>"><%= ticket.id %></a> by <%= ticket.owner ? `${ticket.owner.username}#${ticket.owner.discriminator}` : 'None' %></h2>
-            <% if (ticket.owner && user && ticket.owner.id === user.id) { %>
-                <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>/edit'">Edit</button>
+            <h2><a href="https://support.discordapp.com/hc/en-us/community/posts/<%= ticket.id %>"><%= ticket.id %></a> by 
+                <% if (ticket.owner) { %>
+                    <a href="/users/<%=ticket.owner.id%>"> <%= ticket.owner.username%>#<%= ticket.owner.discriminator %></a>
+                <% } else { %>
+                    None
+                <% } %>
+            </h2>
+            <% if (ticket.owner && user) if (ticket.owner.id === user.id || user.isMaintainer) { %>
+                <% if (ticket.owner && user && ticket.owner.id === user.id) { %>
+                    <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>/edit'">Edit</button>
+                <% } %>
                 <button onclick="deleteTicket()">Delete</button>
                 <script>
                     function deleteTicket() {
@@ -59,7 +67,7 @@
                             ><%= `${comment.time.getMonth()+1 }/${comment.time.getDate()}/${comment.time.getFullYear()} ${comment.time.getHours()}:${comment.time.getMinutes()}` %>
                                 
                             </i>
-                            <b><%= `${comment.user.username}#${comment.user.discriminator}` %></b> - <%= comment.content.content %></a> </li>
+                            <b><a href="/users/<%= comment.user.id %>"><%= `${comment.user.username}#${comment.user.discriminator}` %></a></b> - <%= comment.content.content %></a> </li>
                         <% } %>
                     <% }) %>
                     <% if (editing) { %>

@@ -7,6 +7,7 @@ const config = {
     password: 'password',
     db: 'ccs'
   },
+  maintainers: ['142408079177285632'],
   ...require('./private-config.js')
 }
 

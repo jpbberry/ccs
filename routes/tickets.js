@@ -4,8 +4,10 @@ module.exports = (client) => {
   router.use('/', async (req, res, next) => {
     const token = req.cookies.token
     if(token) {
-      req.user = await client.db.collection('users').findOne({ token: token })
-      if (!req.user) return res.send('Invalid user')
+      const user = await client.db.collection('users').findOne({ token: token })
+      if (!user) return res.send('Invalid user')
+      user.isMaintainer = await client.isMaintainer(user.id)
+      req.user = user
     }
     next()
   })
@@ -51,7 +53,7 @@ module.exports = (client) => {
   
   router.delete('/:ticket', async (req, res) => {
     if (!req.user) return res.json({ error: 'Invalid user' })
-    if (req.user.id !== req.ticket.owner.id) return res.json({ error: 'User doesn\'t own ticket'})
+    if (req.user.id !== req.ticket.owner.id && !req.user.isMaintainer) return res.json({ error: 'User doesn\'t own ticket'})
     
     await client.deleteTicket(req.ticket.id)
     res.json({ success: true })
@@ -105,7 +107,7 @@ module.exports = (client) => {
   
   router.delete('/:ticket/comments/:comment', async (req, res) => {
     if (!req.user) return res.json({ error: 'Invalid user' })
-    if (req.user.id !== req.comment.user.id) return res.json({ error: 'User cannot delete comment' })
+    if (req.user.id !== req.comment.user.id && !req.user.isMaintainer) return res.json({ error: 'User cannot delete comment' })
     
     await client.deleteComment(req.ticket.id, req.comment.id)
     

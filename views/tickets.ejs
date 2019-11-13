@@ -38,7 +38,7 @@
         <% if (!user) { %>
             <button onclick="location.href = 'https://ccs.jt3ch.net/auth'">Login</button>
         <% } else { %>
-            <h4><%=`${user.username}#${user.discriminator}`%> <button onclick="location.href = 'https://ccs.jt3ch.net/auth/logout'">Logout</button></h4> <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/add'">Add Ticket</button>
+            <h4><a href="/users/<%=user.id%>"><%=`${user.username}#${user.discriminator}`%></a> <button onclick="location.href = 'https://ccs.jt3ch.net/auth/logout'">Logout</button></h4> <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/add'">Add Ticket</button>
         <% } %>
         <input id="search" placeholder="Search" onkeyup="search()">
         <script>
