@@ -305,4 +305,31 @@ module.exports = (client) => {
     obj[`comments.${commentID}`] = ""
     return client.db.collection('tickets').updateOne({ id: ticketID}, { $unset: obj })
   }
+  
+  client.getFullUser = async (userID) => {
+    const user = await client.db.collection('users').findOne({ id: userID })
+    const posts = []
+    const comments = []
+    
+    const tickets = await client.db.collection('tickets').find({}).toArray()
+    
+    tickets.forEach(ticket => {
+      if (ticket.owner === userID) posts.push(ticket)
+      const keys = Object.keys(ticket.comments)
+      keys.forEach(commentID => {
+        const comment = ticket.comments[commentID]
+        if (comment.user === userID) comments.push(comment)
+      })
+    })
+    
+    return {
+      user: {
+        username: user.username,
+        discriminator: user.discriminator,
+        id: user.id
+      },
+      posts,
+      comments
+    }
+  }
 }

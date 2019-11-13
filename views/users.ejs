@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        <h1><%= user.user.username %>#<%=user.user.discriminator%></h1>
+        <h4>Posts</h4>
+        <ul>
+            <% user.posts.forEach(post => { %>
+                <li><a href="https://ccs.jt3ch.net/tickets/<%=post.id%>"><%= post.id %></a> - <%= post.content[post.content.length - 1].title %></li>
+            <% }) %>
+        </ul>
+        <h4>Comments</h4>
+        <ul>
+            <% user.comments.forEach(comment => { %>
+                <li><%= comment.id %> - <%= comment.content[comment.content.length - 1].content %></li>
+            <% }) %>
+        </ul>
+    </body>
+</html>
