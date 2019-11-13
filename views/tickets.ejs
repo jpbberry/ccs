@@ -1,6 +1,28 @@
 <!HTDOCS html>
 <html>
     <head>
+        <style>
+            .table {
+                text-align: left;
+            }
+            th {
+                border: 1px black solid;
+            }
+            .keys {
+                text-align: center;
+                font-weight: bold;
+            }
+            .ids {
+                text-align: center;
+                cursor: pointer;
+            }
+            .tags, .titles {
+                padding-left: 1em;
+            }
+            .copied {
+                color: green;
+            }
+        </style>
     </head>
     <body>
         <% if (!user) { %>
@@ -8,12 +30,29 @@
         <% } else { %>
             <h4><%=`${user.username}#${user.discriminator}`%> <button onclick="location.href = 'https://ccs.jt3ch.net/auth/logout'">Logout</button></h4> <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/add'">Add Ticket</button>
         <% } %>
-        <ul>
+        <table class="table">
+            <tr class="keys">
+                <th>ID (Click to Copy)</th>
+                <th>Title</th>
+                <th>Tags</th>
+            </tr>
             <% tickets.forEach(ticket => { %>
-                <li>
-                    <a href="https://ccs.jt3ch.net/tickets/<%=ticket.id%>"><%=ticket.id%> | <%= ticket.content.title %> | <%= ticket.content.tags.join(', ') %></a>
-                </li>
+                <tr>
+                    <th class="ids" onclick="copy(this)"><%=ticket.id%></th>
+                    <th class="titles"> <a href="https://ccs.jt3ch.net/tickets/<%=ticket.id%>"><%= ticket.content.title %></a></th>
+                    <th class="tags"> <%= ticket.content.tags.join(', ') %> </th>
+                </tr>
             <% }) %>
-        </ul>
+        </table>
+        <script>
+            function copy(elm) {
+                console.log('Copying: ' + elm.innerText)
+                window.navigator.clipboard.writeText(elm.innerText)
+                elm.classList.add('copied')
+                setTimeout(() => {
+                    elm.classList.remove('copied')
+                }, 1000)
+            }
+        </script>
     </body>
 </html>

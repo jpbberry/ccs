@@ -1,6 +1,11 @@
 <!HTDOCS html>
 <html>
-    <head></head>
+    <head>
+        <meta property="og:site_name" value="Custodian Cheat Sheet">
+        <meta property="og:title" value="<%= ticket.content.title %>">
+        <meta property="og:description" value="<%= ticket.id %> - Added by <%= ticket.owner ? `${ticket.owner.username}#${ticket.owner.discriminator}` : 'None' %>">
+        <meta property="theme-color" value="#31de5f">
+    </head>
     <body>
         <button onclick="location.href = 'https://ccs.jt3ch.net/tickets'">back</button>
         <div>
