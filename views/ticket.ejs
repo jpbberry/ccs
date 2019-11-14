@@ -17,10 +17,10 @@
                     None
                 <% } %>
             </h2>
-            <% if (ticket.owner && user) if (ticket.owner.id === user.id || user.isMaintainer) { %>
-                <% if (ticket.owner && user && ticket.owner.id === user.id) { %>
-                    <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>/edit'">Edit</button>
-                <% } %>
+            <% if ((ticket.owner && user) && (ticket.owner || {}).id === (user || {}).id) { %>
+                <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>/edit'">Edit</button>
+            <% } %>
+            <% if ((ticket.owner && user) && (ticket.owner || {}).id === (user || {}).id || (user || {}).isMaintainer) { %>
                 <button onclick="deleteTicket()">Delete</button>
                 <script>
                     function deleteTicket() {
@@ -67,7 +67,12 @@
                             ><%= `${comment.time.getMonth()+1 }/${comment.time.getDate()}/${comment.time.getFullYear()} ${comment.time.getHours()}:${comment.time.getMinutes()}` %>
                                 
                             </i>
-                            <b><a href="/users/<%= comment.user.id %>"><%= `${comment.user.username}#${comment.user.discriminator}` %></a></b> - <%= comment.content.content %></a> </li>
+                            <b><a href="/users/<%= comment.user.id %>"><%= `${comment.user.username}#${comment.user.discriminator}` %></a></b> - <%= comment.content.content %></a> 
+                                <% if (user && user.isMaintainer) { %>
+                                    <% editing = true %>
+                                    <button onclick="del('<%=comment.id%>')">Delete</button>
+                                <% } %>
+                            </li>
                         <% } %>
                     <% }) %>
                     <% if (editing) { %>

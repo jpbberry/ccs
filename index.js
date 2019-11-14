@@ -31,6 +31,17 @@ app.get('/', (req, res) => {
   res.send('ccs')
 })
 
+app.use(async(req, res, next) => {
+  const token = req.cookies.token
+  if (token) {
+    const user = await client.db.collection('users').findOne({ token: token })
+    if (!user) return res.send('Invalid user')
+    user.isMaintainer = await client.isMaintainer(user.id)
+    req.user = user
+  }
+  next()
+})
+
 routes.forEach(route => {
   if (!route.endsWith('.js')) return
   const routeFile = require(path.resolve('./routes', route))

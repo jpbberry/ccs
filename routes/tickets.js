@@ -1,17 +1,6 @@
 const express = require('express')
 const router = express.Router()
 module.exports = (client) => {
-  router.use('/', async (req, res, next) => {
-    const token = req.cookies.token
-    if(token) {
-      const user = await client.db.collection('users').findOne({ token: token })
-      if (!user) return res.send('Invalid user')
-      user.isMaintainer = await client.isMaintainer(user.id)
-      req.user = user
-    }
-    next()
-  })
-  
   router.get('/', async (req, res) => {
     const tickets = await client.getTickets()
     res.render('tickets', { tickets, user: req.user })
