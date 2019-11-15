@@ -17,6 +17,7 @@
                     None
                 <% } %>
             </h2>
+            <h2>Status: <%= ticket.content.status %></h2>
             <% if ((ticket.owner && user) && (ticket.owner || {}).id === (user || {}).id) { %>
                 <button onclick="location.href = 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>/edit'">Edit</button>
             <% } %>

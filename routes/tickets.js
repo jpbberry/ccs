@@ -13,10 +13,10 @@ module.exports = (client) => {
   
   router.post('/', async (req, res) => {
     if (!req.user) return res.json({ error: 'You need to be logged in to add a ticket' })
-    if (!req.body.id || !req.body.title || (req.body.tags && !(req.body.tags instanceof Array))) return res.json({ error: 'Missing or invalid values' })
+    if (!req.body.id || !req.body.title || (req.body.tags && !(req.body.tags instanceof Array)) || isNaN(req.body.status)) return res.json({ error: 'Missing or invalid values' })
     const addTicket = await client.addTicket(req.user.id, req.body.id, {
       title: `${req.body.title}`,
-      status: 0,
+      status: Number(req.body.status),
       tags: req.body.tags || []
     })
     if (addTicket.error) return res.json(addTicket)
@@ -25,13 +25,14 @@ module.exports = (client) => {
   })
   
   router.use('/:ticket', async (req, res, next) => {
-    const ticket = await client.getTicket(req.params.ticket)
+    const ticket = await client.getTicket(req.params.ticket.split('.')[0])
     if (!ticket) return res.send('Invalid Ticket')
     req.ticket = ticket
     next()
   })
   
   router.get('/:ticket', (req, res) => {
+    if (req.params.ticket.endsWith('.json')) return res.json(req.ticket)
     res.render('ticket', { ticket: req.ticket, user: req.user})
   })
   

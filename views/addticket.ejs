@@ -5,9 +5,16 @@
     </head>
     <body>
         <button onclick="location.href='https://ccs.jt3ch.net/tickets'">Back</button>
-        <input id="id" placeholder="ID">
-        <input id="title" placeholder="title">
-        <input id="tags" placeholder="T, a, g, s">
+        <h3>Ticket ID</h3><input id="id" placeholder="ID">
+        <h3>Title</h3><input id="title" placeholder="title">
+        <h3>Tags</h3><input id="tags" placeholder="T, a, g, s">
+        <h3>Status</h3><select id="status">
+            <option value="0">None</option>
+            <option value="1">Answered</option>
+            <option value="2">Not Planned</option>
+            <option value="3">Planned</option>
+            <option value="4">Completed</option>
+        </select>
         <button onclick="submit()">Add Ticket</button>
         
         <script>
@@ -16,6 +23,7 @@
                 obj.id = document.getElementById('id').value
                 obj.title = document.getElementById('title').value
                 obj.tags = document.getElementById('tags').value.split(', ')
+                obj.status = Number(document.getElementById('status').value)
                 
                 var xhr = new XMLHttpRequest()
                 xhr.open('POST', 'https://ccs.jt3ch.net/tickets')

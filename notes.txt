@@ -1,0 +1,9 @@
+Notes.
+Notes for anything regarding internal code of the ccs for easy access.
+
+Ticket statuses:
+ 0: None
+ 1: Answered
+ 2: Not Planned
+ 3: Planned
+ 4: Completed

@@ -7,12 +7,22 @@
         <button onclick="location.href='https://ccs.jt3ch.net/tickets/<%= ticket.id %>'">Back</button>
         <h4>Title <input id="title" placeholder="Title" value="<%= ticket.content.title %>"></h4>
         <h4>Status <input id="tags" placeholder="T, a, g, s" value="<%= ticket.content.tags.join(', ') %>"></h4>
+        <h4>Status<select id="status">
+            <option value="0">None</option>
+            <option value="1">Answered</option>
+            <option value="2">Not Planned</option>
+            <option value="3">Planned</option>
+            <option value="4">Completed</option>
+        </select></h4>
         <button onclick="submit()">Edit Ticket</button>
         <script>
+            document.getElementById('status').value = "<%= ticket.content.statusNumber %>"
             function submit() {
                 var obj = {}
                 obj.title = document.getElementById('title').value
                 obj.tags = document.getElementById('tags').value.split(', ')
+                obj.status = Number(document.getElementById('status').value)
+                
                 
                 var xhr = new XMLHttpRequest()
                 xhr.open('PUT', 'https://ccs.jt3ch.net/tickets/<%= ticket.id %>')

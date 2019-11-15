@@ -113,6 +113,14 @@ module.exports = (client) => {
   client.deleteTicket = (ticketID) => {
     return client.db.collection('tickets').removeOne({ id: ticketID })
   }
+  
+  const statuses = {
+    0: 'None',
+    1: 'Answered',
+    2: 'Not Planned',
+    3: 'Planned',
+    4: 'Completed'
+  }
 
   // tickets
   client.getTickets = async() => {
@@ -129,6 +137,7 @@ module.exports = (client) => {
       }
       delete ticket.comments
       ticket.content = ticket.content[ticket.content.length - 1]
+      ticket.content.status = statuses[ticket.content.status]
       res.push(ticket)
     })
 
@@ -161,6 +170,8 @@ module.exports = (client) => {
     }
     ticket.comments = comments
     ticket.content = ticket.content[ticket.content.length-1]
+    ticket.content.statusNumber = ticket.content.status
+    ticket.content.status = statuses[ticket.content.status]
     
     return ticket
   }
@@ -234,7 +245,7 @@ module.exports = (client) => {
     const contentOBJ = {
       time: new Date(),
       title: content.title || current.title,
-      status: content.status || current.status,
+      status: !content.status && content.status !== 0 ? current.status : content.status,
       category: 'todo',
       tags: content.tags || current.tags
     }
