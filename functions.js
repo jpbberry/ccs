@@ -96,12 +96,15 @@ module.exports = (client) => {
     return newUser
   }
   
-  client.ticketExist = (ticketID) => {
+  client.appTicket = (ticketID) => {
     return new Promise(resolve => {
       fetch(`https://support.discordapp.com/api/v2/help_center/community/posts/${ticketID}`)
         .then(x => {
-          if (x.ok) resolve(true)
+          if (x.ok) return x.json()
           else resolve(false)
+        })
+        .then(json => {
+          resolve(json)
         })
     })
   }
@@ -120,6 +123,23 @@ module.exports = (client) => {
     2: 'Not Planned',
     3: 'Planned',
     4: 'Completed'
+  }
+  const topics = {
+    "360000786252": "Merchandise",
+    "360000790031": "Account & Server Management",
+    "360000786212": "Chat",
+    "360000789951": "Other",
+    "360000789931": "Nitro",
+    "360000789911": "API",
+    "360000789851": "Overlay",
+    "360000786192": "Mobile"
+  }
+  const appStatusConvert = {
+    'none': 0,
+    'planned': 3,
+    'answered': 1,
+    'not_planned': 2,
+    'completed': 4
   }
 
   // tickets
@@ -141,6 +161,11 @@ module.exports = (client) => {
       res.push(ticket)
     })
 
+    res.sort((a,b) => {
+      if(a.content.name < b.content.name) return -1
+      if(a.content.name > b.content.name) return 1
+      return 0
+    })
     return res
   }
 
@@ -206,12 +231,13 @@ module.exports = (client) => {
   client.addTicket = async(userID, ticketID, content) => {
     const ticket = await client.db.collection('tickets').findOne({ id: ticketID })
     if (ticket) return { error: 'Ticket is already made by someone else!' }
-    const exists = await client.ticketExist(ticketID)
-    if (!exists) return { error: 'Invalid feedback ticket' }
+    const tic = await client.appTicket(ticketID)
+    if (!tic) return { error: 'Invalid feedback ticket' }
     const ticketOBJ = {
       id: null,
       owner: null,
       content: [],
+      category: topics[`${tic.post.topic_id}`] || "None",
       comments: {}
     }
     ticketOBJ.id = ticketID
@@ -220,7 +246,6 @@ module.exports = (client) => {
       time: null,
       title: '',
       status: 0,
-      category: 'todo',
       tags: []
     }
     contentOBJ.time = new Date()

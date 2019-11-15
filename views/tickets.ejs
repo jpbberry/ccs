@@ -23,15 +23,19 @@
             }
             .tags {
                 white-space: nowrap;
-                width: 10%;
+                width: 15%;
             }
             .status {
-                width: 10%;
+                width: 5%;
+                text-align: center;
+            }
+            .category {
+                width: 15%;
                 text-align: center;
             }
             .titles {
                 height: 2em;
-                width: 50%;
+                width: 55%;
             }
             .copied {
                 color: green;
@@ -70,6 +74,7 @@
                 <th>ID (Click to Copy)</th>
                 <th>Title</th>
                 <th>Tags</th>
+                <th>Category</th>
                 <th>Status</th>
             </tr>
             <% tickets.forEach(ticket => { %>
@@ -77,6 +82,7 @@
                     <td class="ids" onclick="copy(this)"><%=ticket.id%></td>
                     <td class="titles"> <a href="https://ccs.jt3ch.net/tickets/<%=ticket.id%>"><%= ticket.content.title %></a></td>
                     <td class="tags"> <%= ticket.content.tags.join(', ') %> </td>
+                    <td class="category"><%= ticket.category %></td>
                     <td class="status"> <%= ticket.content.status %> </td>
                 </tr>
             <% }) %>

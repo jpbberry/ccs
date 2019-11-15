@@ -7,3 +7,13 @@ Ticket statuses:
  2: Not Planned
  3: Planned
  4: Completed
+ 
+Topic IDS:
+ 360000786252: Merchandise
+ 360000790031: Account & Server Management
+ 360000786212: Chat
+ 360000789951: Other
+ 360000789931: Nitro
+ 360000789911: API
+ 360000789851: Overlay
+ 360000786192: Mobile
