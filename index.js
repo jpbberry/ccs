@@ -28,7 +28,7 @@ app.set('views', './views')
 app.set('view engine', 'ejs')
 
 app.get('/', (req, res) => {
-  res.send('ccs')
+  res.redirect('/tickets')
 })
 
 app.use(async(req, res, next) => {
